@@ -1,0 +1,27 @@
+{
+    "name": "barbery/laravel-phpredis",
+    "type": "library",
+    "time": "2016-04-08",
+    "description": "phpredis library for laravel",
+    "keywords": ["laravel", "phpredis", "laravel-phpredis", "redisServiceProvider", "redisStore"],
+    "homepage": "https://github.com/Barbery/laravel-phpredis",
+    "license": "BSD",
+    "authors": [
+        {
+            "name": "Barbery Xie",
+            "email": "a6798246@gmail.com",
+            "homepage": "http://www.stutostu.com",
+            "role": "Developer"
+        }
+    ],
+    "suggest": {
+        "ext-redis": "The php redis extension https://github.com/nicolasff/phpredis/ is required for connecting to redis server"
+    },
+    "require": {
+        "php": ">=5.4.0",
+        "ext-redis": "*"
+    },
+    "autoload": {
+        "psr-4": {"Barbery\\": "src/"}
+    }
+}
