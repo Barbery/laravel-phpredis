@@ -2,6 +2,8 @@
 
 namespace Barbery\Providers;
 
+use Barbery\Extensions\CacheManager;
+
 class CacheServiceProvider extends \Illuminate\Cache\CacheServiceProvider
 {
     protected $defer = true;
@@ -25,7 +27,7 @@ class CacheServiceProvider extends \Illuminate\Cache\CacheServiceProvider
     {
         parent::register();
         $this->app->singleton('cache', function ($app) {
-            return new \App\Extensions\CacheManager($app);
+            return new CacheManager($app);
         });
     }
 }
