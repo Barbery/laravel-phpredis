@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Providers;
+namespace Barbery\Providers;
 
 class CacheServiceProvider extends \Illuminate\Cache\CacheServiceProvider
 {
