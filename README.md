@@ -1,5 +1,30 @@
 # laravel-phpredis
 
+## config
+If you want to completely use phpredis instead of predis... You should add below config to your config/app.php file:
+```php
+'providers' => [
+        // ...
+        // YOUR OTHER PROVIDERS SETTING 
+        // ...
+        // And you should commend those system's provider as below
+        // Illuminate\Cache\CacheServiceProvider::class,
+        // Illuminate\Redis\RedisServiceProvider::class,
+
+        // add this to your providers
+        Barbery\Providers\RedisServiceProvider::class,
+        Barbery\Providers\CacheServiceProvider::class,
+]
+
+
+aliases => [
+        // you must rename the Redis Key name, because it's conflict with the \Redis class provide by phpredis
+        // may be you can rename it to MyRedis, So, you can use it like that: MyRedis::get('key'); MyRedis::set('key', 'value');
+        'Redis' => Illuminate\Support\Facades\Redis::class,
+]
+```
+
+
 
 ```php
 // add config to config/database.php
