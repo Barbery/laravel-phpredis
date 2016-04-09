@@ -1,6 +1,12 @@
 # laravel-phpredis
 this is the library provide phpredis support in the laravel framework, clearly it support redis cluster too.
 
+## install
+You can install it by composer, just execute below command
+```bash
+composer require barbery/laravel-phpredis:dev-master
+```
+
 ## config
 If you want to completely use phpredis instead of predis... You should add below config to your config/app.php file:
 ```php
