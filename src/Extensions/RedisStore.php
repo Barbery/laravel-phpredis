@@ -84,6 +84,23 @@ class RedisStore extends \Illuminate\Cache\RedisStore
     }
 
 
+
+    /**
+     * Store an item in the cache indefinitely.
+     *
+     * @param  string  $key
+     * @param  mixed   $value
+     * @return void
+     */
+    public function forever($key, $value)
+    {
+        $value = is_numeric($value) ? $value : json_encode($value);
+
+        $this->connection()->set($this->prefix.$key, $value);
+    }
+
+
+
     /**
      * Remove all items from the cache.
      *
