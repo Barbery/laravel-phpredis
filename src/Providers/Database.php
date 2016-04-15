@@ -7,11 +7,12 @@ use RedisCluster;
 
 class Database extends \Illuminate\Redis\Database
 {
-    private $_optionsKey = ['prefix' => Redis::OPT_PREFIX, 'failover' => RedisCluster::FAILOVER_ERROR];
+    private $_optionsKey = ['prefix' => Redis::OPT_PREFIX, 'failover' => RedisCluster::OPT_SLAVE_FAILOVER];
 
 
     protected function createAggregateClient(array $servers, array $options = [])
     {
+
         $options += array(
             'lazy_connect' => true,
             'pconnect'     => false,
