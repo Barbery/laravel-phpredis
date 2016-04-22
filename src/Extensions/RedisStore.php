@@ -110,4 +110,10 @@ class RedisStore extends \Illuminate\Cache\RedisStore
     {
     }
 
+
+    public function __call($method, $arguments)
+    {
+        return call_user_func_array([$this->connection(), $method], $arguments);
+    }
+
 }
