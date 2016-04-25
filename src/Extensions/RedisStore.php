@@ -58,7 +58,7 @@ class RedisStore extends \Illuminate\Cache\RedisStore
     }
 
 
-        /**
+    /**
      * Retrieve multiple items from the cache by key.
      *
      * Items not found in the cache will have a null value.
@@ -108,12 +108,28 @@ class RedisStore extends \Illuminate\Cache\RedisStore
      */
     public function flush()
     {
+        $isCluster = config('database.redis.cluster');
+        if (!$isCluster) {
+            parent::flush();
+        }
     }
 
 
-    public function __call($method, $arguments)
+    /**
+     * Store multiple items in the cache for a given number of time.
+     *
+     * @param  array  $values
+     * @param  int  $time default unit is seconds
+     * @return void
+     */
+    public function putMany(array $values, $time)
     {
-        return call_user_func_array([$this->connection(), $method], $arguments);
+        $prefix = $this->prefix;
+        $seconds = $this->translateToSeconds($time);
+        return $this->redis->pipeline(function($pipe) use ($values, $seconds, $prefix){
+            foreach ($values as $key => $value) {
+                $pipe->set($prefix.$key, $value, $seconds);
+            }
+        });
     }
-
 }

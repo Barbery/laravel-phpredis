@@ -4,43 +4,51 @@ namespace Barbery\Providers;
 
 use Redis;
 use RedisCluster;
+use Illuminate\Support\Arr;
 
 class Database extends \Illuminate\Redis\Database
 {
     private $_optionsKey = ['prefix' => Redis::OPT_PREFIX, 'failover' => RedisCluster::OPT_SLAVE_FAILOVER];
 
 
+    /**
+     * Create a new Redis connection instance.
+     *
+     * @param  array  $servers
+     * @return void
+     */
+    public function __construct(array $servers = [])
+    {
+        $cluster = Arr::pull($servers, 'cluster');
+        if (isset($servers['cluster']) && $servers['cluster']) {
+            $options = (array) Arr::pull($servers['clusterConfig'], 'options');
+            $this->clients = $this->createAggregateClient($servers['clusterConfig'], $options);
+        } else {
+            $options = (array) Arr::pull($servers, 'options');
+            $this->clients = $this->createSingleClients($servers, $options);
+        }
+    }
+
     protected function createAggregateClient(array $servers, array $options = [])
     {
-
-        $options += array(
-            'lazy_connect' => true,
-            'pconnect'     => false,
-            'timeout'      => 0,
-        );
-
         $cluster = array();
-        foreach ($servers['clusterConfig'] as $key => $server) {
+        foreach ($servers as $key => $server) {
             if (isset($this->_optionsKey[$key])) {
                 continue;
             }
 
             $host = empty($server['host']) ? '127.0.0.1' : $server['host'];
             $port = empty($server['port']) ? '6379'      : $server['port'];
-
-            if (isset($server['persistent'])) {
-                $options['pconnect'] = $options['pconnect'] && $server['persistent'];
-            } else {
-                $options['pconnect'] = false;
-            }
-
             $cluster[] = "{$host}:{$port}";
         }
 
-        $RedisCluster = new RedisCluster(null, $cluster);
+        $readTimeout = Arr::get($options, 'read_timeout', 0);
+        $timeout = Arr::get($options, 'timeout', 0);
+        $persistent = Arr::get($options, 'persistent', false);
+        $RedisCluster = new RedisCluster(null, $cluster, $readTimeout, $timeout, $persistent);
         foreach ($this->_optionsKey as $key => $option) {
-            if (!empty($servers['clusterConfig'][$key])) {
-                $RedisCluster->setOption($option, $servers['clusterConfig'][$key]);
+            if (!empty($options[$key])) {
+                $RedisCluster->setOption($option, $options[$key]);
             }
         }
 
@@ -51,16 +59,17 @@ class Database extends \Illuminate\Redis\Database
     protected function createSingleClients(array $servers, array $options = [])
     {
         $clients = array();
+        $ingoreKey = ['clusterConfig' => true];
 
         foreach ($servers as $key => $server) {
-            if ($key === 'cluster') continue;
+            if (isset($ingoreKey[$key])) {
+                continue;
+            }
 
             $redis = new Redis();
-
             $host    = empty($server['host'])    ? '127.0.0.1' : $server['host'];
             $port    = empty($server['port'])    ? '6379'      : $server['port'];
             $timeout = empty($server['timeout']) ? 0           : $server['timeout'];
-
             if (isset($server['persistent']) && $server['persistent']) {
                 $redis->pconnect($host, $port, $timeout);
             } else {
@@ -79,5 +88,20 @@ class Database extends \Illuminate\Redis\Database
         }
 
         return $clients;
+    }
+
+
+    /**
+     * redis pipeline operation
+     * 
+     * @param  closure $callback
+     * @return []$result
+     *
+     */
+    public function pipeline($callback)
+    {
+        $Pipe = $this->connection()->multi(Redis::PIPELINE);
+        $callback($Pipe);
+        return $Pipe->exec();
     }
 }
