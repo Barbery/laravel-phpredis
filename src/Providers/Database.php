@@ -20,7 +20,7 @@ class Database extends \Illuminate\Redis\Database
     public function __construct(array $servers = [])
     {
         $cluster = Arr::pull($servers, 'cluster');
-        if (isset($servers['cluster']) && $servers['cluster']) {
+        if ($cluster) {
             $options = (array) Arr::pull($servers['clusterConfig'], 'options');
             $this->clients = $this->createAggregateClient($servers['clusterConfig'], $options);
         } else {
