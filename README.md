@@ -1,6 +1,12 @@
 # laravel-phpredis
 this is the library provide phpredis support in the laravel framework, clearly it support redis cluster too.
 
+## feature
+1. this library implement redis driver in Cache and Session, you can easy to use it. 
+2. implement redis pipeline just like the laravel document introduce
+3. change Cache putMany method to use pipeline to improve performance
+
+
 ## install
 You can install it by composer, just execute below command
 ```bash
@@ -26,8 +32,9 @@ If you want to completely use phpredis instead of predis... You should add below
 
 aliases => [
         // you must rename the Redis Key name, because it's conflict with the \Redis class provide by phpredis
-        // may be you can rename it to MyRedis, So, you can use it like that: MyRedis::get('key'); MyRedis::set('key', 'value');
-        'Redis' => Illuminate\Support\Facades\Redis::class,
+        // may be you can rename it to MyRedis, So, you can use it like that: 
+        // MyRedis::get('key'); MyRedis::set('key', 'value'); MyRedis::pipeline(function($pipe){YOUR_CODE});
+        'MyRedis' => Illuminate\Support\Facades\Redis::class,
 ]
 ```
 
@@ -49,31 +56,25 @@ aliases => [
 
         // this is for redis cluster mode
         'clusterConfig' => [
-            // failover setting
-            'failover' => RedisCluster::FAILOVER_ERROR,
+            // cluster options
+            'options' => [
+                'failover' => env('REDIS_CLUSTER_FAILOVER', RedisCluster::FAILOVER_ERROR),
+                'read_timeout' => env('REDIS_CLUSTER_READ_TIMEOUT', 3),
+                'timeout' => env('REDIS_CLUSTER_TIMEOUT', 3),
+                'persistent' => env('REDIS_CLUSTER_PERSISTENT', false),
+            ],
+            // put your cluster master node here
             [
-                'host' => '127.0.0.1',
-                'port' => 6379,
+                'host' => env('REDIS_HOST_1'),
+                'port' => env('REDIS_PORT_1'),
             ],
             [
-                'host' => '127.0.0.1',
-                'port' => 6380,
+                'host' => env('REDIS_HOST_2'),
+                'port' => env('REDIS_PORT_2'),
             ],
             [
-                'host' => '127.0.0.1',
-                'port' => 6381,
-            ],
-            [
-                'host' => '127.0.0.1',
-                'port' => 6382,
-            ],
-            [
-                'host' => '127.0.0.1',
-                'port' => 6383,
-            ],
-            [
-                'host' => '127.0.0.1',
-                'port' => 6384,
+                'host' => env('REDIS_HOST_3'),
+                'port' => env('REDIS_PORT_3'),
             ],
         ],
     ],
