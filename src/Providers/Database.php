@@ -8,7 +8,7 @@ use Illuminate\Support\Arr;
 
 class Database extends \Illuminate\Redis\Database
 {
-    private $_optionsKey = ['prefix' => Redis::OPT_PREFIX, 'failover' => RedisCluster::OPT_SLAVE_FAILOVER];
+    private $_optionsKey = ['prefix' => Redis::OPT_PREFIX];
 
 
     /**
@@ -31,6 +31,7 @@ class Database extends \Illuminate\Redis\Database
 
     protected function createAggregateClient(array $servers, array $options = [])
     {
+        $this->_optionsKey += ['failover' => RedisCluster::OPT_SLAVE_FAILOVER];
         $cluster = array();
         foreach ($servers as $key => $server) {
             if (isset($this->_optionsKey[$key])) {
