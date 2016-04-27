@@ -1,12 +1,16 @@
 <?php
-
 namespace Barbery\Extensions;
+
+// use Closure;
 
 /**
 * 
 */
 class RedisStore extends \Illuminate\Cache\RedisStore
 {
+    protected $defaultUnit;
+    protected $encodeFunc;
+    protected $decodeFunc;
 
     /**
      * Retrieve an item from the cache by key.
@@ -18,7 +22,7 @@ class RedisStore extends \Illuminate\Cache\RedisStore
     {
         $value = $this->connection()->get($this->prefix.$key);
         if ($value !== null && $value !== false) {
-            return is_numeric($value) ? $value : json_decode($value, true);
+            return is_numeric($value) ? $value : ($this->decodeFunc)($value);
         }
     }
 
@@ -33,7 +37,7 @@ class RedisStore extends \Illuminate\Cache\RedisStore
      */
     public function put($key, $value, $time)
     {
-        $value = is_numeric($value) ? $value : json_encode($value);
+        $value = is_numeric($value) ? $value : ($this->encodeFunc)($value);
 
         $time = max(1, $this->translateToSeconds($time));
 
@@ -43,17 +47,30 @@ class RedisStore extends \Illuminate\Cache\RedisStore
 
     private function translateToSeconds($time)
     {
-        $unit = substr($time, -1);
+        $unit = ltrim($time, '0123456789');
+        if (empty($unit)) {
+            $unit = $this->defaultUnit;
+        }
+
         switch (strtolower($unit)) {
+            case 'minutes':
+            case 'minute':
             case 'm':
                 return (int)$time * 60;
 
+            case 'hours':
+            case 'hour':
             case 'h':
                 return (int)$time * 3600;
 
+            case 'seconds':
+            case 'second':
             case 's':
-            default:
                 return (int)$time;
+
+            default:
+                // follow the laravel default unit: minutes
+                return (int)$time * 60;
         }
     }
 
@@ -77,7 +94,7 @@ class RedisStore extends \Illuminate\Cache\RedisStore
         $values = $this->connection()->mget($prefixedKeys);
 
         foreach ($values as $index => $value) {
-            $return[$keys[$index]] = is_numeric($value) ? $value : json_decode($value, true);
+            $return[$keys[$index]] = is_numeric($value) ? $value : ($this->decodeFunc)($value);
         }
 
         return $return;
@@ -94,7 +111,7 @@ class RedisStore extends \Illuminate\Cache\RedisStore
      */
     public function forever($key, $value)
     {
-        $value = is_numeric($value) ? $value : json_encode($value);
+        $value = is_numeric($value) ? $value : ($this->encodeFunc)($value);
 
         $this->connection()->set($this->prefix.$key, $value);
     }
@@ -115,21 +132,24 @@ class RedisStore extends \Illuminate\Cache\RedisStore
     }
 
 
-    /**
-     * Store multiple items in the cache for a given number of time.
-     *
-     * @param  array  $values
-     * @param  int  $time default unit is seconds
-     * @return void
-     */
-    public function putMany(array $values, $time)
+
+    public function setDefaultUnit($unit)
     {
-        $prefix = $this->prefix;
-        $seconds = $this->translateToSeconds($time);
-        return $this->redis->pipeline(function($pipe) use ($values, $seconds, $prefix){
-            foreach ($values as $key => $value) {
-                $pipe->set($prefix.$key, $value, $seconds);
-            }
-        });
+        $this->defaultUnit = $unit;
+        return $this;
+    }
+
+
+    public function setEncodeFunc(Callable $encodeFunc)
+    {
+        $this->encodeFunc = $encodeFunc;
+        return $this;
+    }
+
+
+    public function setDecodeFunc(Callable $decodeFunc)
+    {
+        $this->decodeFunc = $decodeFunc;
+        return $this;
     }
 }

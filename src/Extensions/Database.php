@@ -1,6 +1,6 @@
 <?php
 
-namespace Barbery\Providers;
+namespace Barbery\Extensions;
 
 use Redis;
 use RedisCluster;

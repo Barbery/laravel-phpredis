@@ -4,7 +4,8 @@ this is the library provide phpredis support in the laravel framework, clearly i
 ## feature
 1. this library implement redis driver in Cache and Session, you can easy to use it. 
 2. implement redis pipeline just like the laravel document introduce
-3. change Cache putMany method to use pipeline to improve performance
+3. you can customize your serilize and unserilize function
+4. you can customize your cache expired time default unit
 
 
 ## install
@@ -21,12 +22,10 @@ If you want to completely use phpredis instead of predis... You should add below
         // YOUR OTHER PROVIDERS SETTING 
         // ...
         // And you should commend those system's provider as below
-        // Illuminate\Cache\CacheServiceProvider::class,
         // Illuminate\Redis\RedisServiceProvider::class,
 
         // add this to your providers
         Barbery\Providers\RedisServiceProvider::class,
-        Barbery\Providers\CacheServiceProvider::class,
 ]
 
 
@@ -41,7 +40,7 @@ aliases => [
 
 
 ```php
-// add config to config/database.php
+// add config to `config/database.php`
 'redis' => [
         // if this true, will enable redis cluster mode
         'cluster' => env('REDIS_CLUSTER', false),
@@ -79,4 +78,26 @@ aliases => [
         ],
     ],
 
+```
+
+
+## Advance config
+The default unit in laravel is minutes, if you want to change it, you can add config in your `app/cache.php`
+```php
+'stores' => [
+        // YOUR OTHER SETTING
+        // ...
+
+        'redis' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            // add this config to change the default unit, it can be 'second','minute','hour'
+            'defaultUnit' => 'second',
+            // if you don't set encodeFunc and decodeFunc,
+            // default to use php serialize and unserialize to encode/decode value
+            // below setting show you how to change it to use json_encode/json_decode to encode/decode value
+            'encodeFunc' => function($value){return json_encode($value);},
+            'decodeFunc' => function($value){return json_decode($value, true);},
+        ],
+    ],
 ```
