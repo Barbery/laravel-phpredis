@@ -22,7 +22,7 @@ class RedisStore extends \Illuminate\Cache\RedisStore
     {
         $value = $this->connection()->get($this->prefix.$key);
         if ($value !== null && $value !== false) {
-            return is_numeric($value) ? $value : ($this->decodeFunc)($value);
+            return is_numeric($value) ? $value : call_user_func($this->decodeFunc, $value);
         }
     }
 
@@ -37,7 +37,7 @@ class RedisStore extends \Illuminate\Cache\RedisStore
      */
     public function put($key, $value, $time)
     {
-        $value = is_numeric($value) ? $value : ($this->encodeFunc)($value);
+        $value = is_numeric($value) ? $value : call_user_func($this->encodeFunc, $value);
 
         $time = max(1, $this->translateToSeconds($time));
 
@@ -94,7 +94,7 @@ class RedisStore extends \Illuminate\Cache\RedisStore
         $values = $this->connection()->mget($prefixedKeys);
 
         foreach ($values as $index => $value) {
-            $return[$keys[$index]] = is_numeric($value) ? $value : ($this->decodeFunc)($value);
+            $return[$keys[$index]] = is_numeric($value) ? $value : call_user_func($this->decodeFunc, $value);
         }
 
         return $return;
@@ -111,7 +111,7 @@ class RedisStore extends \Illuminate\Cache\RedisStore
      */
     public function forever($key, $value)
     {
-        $value = is_numeric($value) ? $value : ($this->encodeFunc)($value);
+        $value = is_numeric($value) ? $value : call_user_func($this->encodeFunc, $value);
 
         $this->connection()->set($this->prefix.$key, $value);
     }
