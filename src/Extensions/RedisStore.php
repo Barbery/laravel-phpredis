@@ -4,8 +4,8 @@ namespace Barbery\Extensions;
 // use Closure;
 
 /**
-* 
-*/
+ *
+ */
 class RedisStore extends \Illuminate\Cache\RedisStore
 {
     protected $defaultUnit;
@@ -20,12 +20,11 @@ class RedisStore extends \Illuminate\Cache\RedisStore
      */
     public function get($key)
     {
-        $value = $this->connection()->get($this->prefix.$key);
+        $value = $this->connection()->get($this->prefix . $key);
         if ($value !== null && $value !== false) {
             return is_numeric($value) ? $value : call_user_func($this->decodeFunc, $value);
         }
     }
-
 
     /**
      * Store an item in the cache for a given number of time.
@@ -41,9 +40,8 @@ class RedisStore extends \Illuminate\Cache\RedisStore
 
         $time = max(1, $this->translateToSeconds($time));
 
-        $this->connection()->setex($this->prefix.$key, $time, $value);
+        $this->connection()->setex($this->prefix . $key, $time, $value);
     }
-
 
     private function translateToSeconds($time)
     {
@@ -56,24 +54,23 @@ class RedisStore extends \Illuminate\Cache\RedisStore
             case 'minutes':
             case 'minute':
             case 'm':
-                return (int)$time * 60;
+                return (int) $time * 60;
 
             case 'hours':
             case 'hour':
             case 'h':
-                return (int)$time * 3600;
+                return (int) $time * 3600;
 
             case 'seconds':
             case 'second':
             case 's':
-                return (int)$time;
+                return (int) $time;
 
             default:
                 // follow the laravel default unit: minutes
-                return (int)$time * 60;
+                return (int) $time * 60;
         }
     }
-
 
     /**
      * Retrieve multiple items from the cache by key.
@@ -88,7 +85,7 @@ class RedisStore extends \Illuminate\Cache\RedisStore
         $return = [];
 
         $prefixedKeys = array_map(function ($key) {
-            return $this->prefix.$key;
+            return $this->prefix . $key;
         }, $keys);
 
         $values = $this->connection()->mget($prefixedKeys);
@@ -99,8 +96,6 @@ class RedisStore extends \Illuminate\Cache\RedisStore
 
         return $return;
     }
-
-
 
     /**
      * Store an item in the cache indefinitely.
@@ -113,10 +108,8 @@ class RedisStore extends \Illuminate\Cache\RedisStore
     {
         $value = is_numeric($value) ? $value : call_user_func($this->encodeFunc, $value);
 
-        $this->connection()->set($this->prefix.$key, $value);
+        $this->connection()->set($this->prefix . $key, $value);
     }
-
-
 
     /**
      * Remove all items from the cache.
@@ -131,23 +124,19 @@ class RedisStore extends \Illuminate\Cache\RedisStore
         }
     }
 
-
-
     public function setDefaultUnit($unit)
     {
         $this->defaultUnit = $unit;
         return $this;
     }
 
-
-    public function setEncodeFunc(Callable $encodeFunc)
+    public function setEncodeFunc(callable $encodeFunc)
     {
         $this->encodeFunc = $encodeFunc;
         return $this;
     }
 
-
-    public function setDecodeFunc(Callable $decodeFunc)
+    public function setDecodeFunc(callable $decodeFunc)
     {
         $this->decodeFunc = $decodeFunc;
         return $this;

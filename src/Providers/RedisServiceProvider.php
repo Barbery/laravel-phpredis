@@ -2,12 +2,13 @@
 
 namespace Barbery\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Barbery\Extensions\Database;
+use Barbery\Extensions\RedisConnector;
 use Barbery\Extensions\RedisStore;
 use Barbery\Extensions\Repository;
-use Barbery\Extensions\Database;
 use Cache;
 use Illuminate\Support\Arr;
+use Illuminate\Support\ServiceProvider;
 
 class RedisServiceProvider extends ServiceProvider
 {
@@ -25,7 +26,7 @@ class RedisServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Cache::extend('redis', function($app, $config){
+        Cache::extend('redis', function ($app, $config) {
             $store = new RedisStore(
                 $app['redis'],
                 Arr::get($config, 'prefix') ?: $this->app['config']['cache.prefix'],
@@ -42,6 +43,10 @@ class RedisServiceProvider extends ServiceProvider
             $repository = new Repository($store);
             return $repository;
         });
+
+        \Queue::extend('redis', function () {
+            return new RedisConnector(app('redis'));
+        });
     }
 
     /**
@@ -55,7 +60,6 @@ class RedisServiceProvider extends ServiceProvider
             return new Database($app['config']['database.redis']);
         });
     }
-
 
     public function provides()
     {

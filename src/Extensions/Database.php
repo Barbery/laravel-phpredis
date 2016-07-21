@@ -2,14 +2,13 @@
 
 namespace Barbery\Extensions;
 
+use Illuminate\Support\Arr;
 use Redis;
 use RedisCluster;
-use Illuminate\Support\Arr;
 
 class Database extends \Illuminate\Redis\Database
 {
     private $_optionsKey = ['prefix' => Redis::OPT_PREFIX];
-
 
     /**
      * Create a new Redis connection instance.
@@ -21,10 +20,10 @@ class Database extends \Illuminate\Redis\Database
     {
         $cluster = Arr::pull($servers, 'cluster');
         if ($cluster) {
-            $options = (array) Arr::pull($servers['clusterConfig'], 'options');
+            $options       = (array) Arr::pull($servers['clusterConfig'], 'options');
             $this->clients = $this->createAggregateClient($servers['clusterConfig'], $options);
         } else {
-            $options = (array) Arr::pull($servers, 'options');
+            $options       = (array) Arr::pull($servers, 'options');
             $this->clients = $this->createSingleClients($servers, $options);
         }
     }
@@ -38,14 +37,14 @@ class Database extends \Illuminate\Redis\Database
                 continue;
             }
 
-            $host = empty($server['host']) ? '127.0.0.1' : $server['host'];
-            $port = empty($server['port']) ? '6379'      : $server['port'];
+            $host      = empty($server['host']) ? '127.0.0.1' : $server['host'];
+            $port      = empty($server['port']) ? '6379' : $server['port'];
             $cluster[] = "{$host}:{$port}";
         }
 
-        $readTimeout = Arr::get($options, 'read_timeout', 0);
-        $timeout = Arr::get($options, 'timeout', 0);
-        $persistent = Arr::get($options, 'persistent', false);
+        $readTimeout  = Arr::get($options, 'read_timeout', 0);
+        $timeout      = Arr::get($options, 'timeout', 0);
+        $persistent   = Arr::get($options, 'persistent', false);
         $RedisCluster = new RedisCluster(null, $cluster, $readTimeout, $timeout, $persistent);
         foreach ($this->_optionsKey as $key => $option) {
             if (!empty($options[$key])) {
@@ -56,10 +55,9 @@ class Database extends \Illuminate\Redis\Database
         return array('default' => $RedisCluster);
     }
 
-
     protected function createSingleClients(array $servers, array $options = [])
     {
-        $clients = array();
+        $clients   = array();
         $ingoreKey = ['clusterConfig' => true];
 
         foreach ($servers as $key => $server) {
@@ -67,10 +65,10 @@ class Database extends \Illuminate\Redis\Database
                 continue;
             }
 
-            $redis = new Redis();
-            $host    = empty($server['host'])    ? '127.0.0.1' : $server['host'];
-            $port    = empty($server['port'])    ? '6379'      : $server['port'];
-            $timeout = empty($server['timeout']) ? 0           : $server['timeout'];
+            $redis   = new Redis();
+            $host    = empty($server['host']) ? '127.0.0.1' : $server['host'];
+            $port    = empty($server['port']) ? '6379' : $server['port'];
+            $timeout = empty($server['timeout']) ? 0 : $server['timeout'];
             if (isset($server['persistent']) && $server['persistent']) {
                 $redis->pconnect($host, $port, $timeout);
             } else {
@@ -91,18 +89,38 @@ class Database extends \Illuminate\Redis\Database
         return $clients;
     }
 
-
     /**
      * redis pipeline operation
-     * 
+     *
      * @param  closure $callback
      * @return []$result
      *
      */
     public function pipeline($callback)
     {
-        $Pipe = $this->connection()->multi(Redis::PIPELINE);
-        $callback($Pipe);
-        return $Pipe->exec();
+        return $this->bulkOperate($callback, Redis::PIPELINE);
+    }
+
+    public function transaction($options, callable $callback)
+    {
+        $Redis = $this->connection();
+        if (!empty($options['cas']) && !empty($options['watch'])) {
+            $Redis->watch($options['watch']);
+        }
+
+        $retry = isset($options['retry']) ? $options['retry'] : 1;
+        for ($i = 0; $i < $retry; $i++) {
+            $ret = $this->bulkOperate($callback, Redis::MULTI);
+            if ($ret !== false) {
+                return $ret;
+            }
+        }
+    }
+
+    public function bulkOperate(callable $callback, $type)
+    {
+        $Redis = $this->connection()->multi($type);
+        $callback($Redis);
+        return $Redis->exec();
     }
 }
