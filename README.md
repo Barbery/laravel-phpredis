@@ -2,11 +2,10 @@
 this is the library provide phpredis support in the laravel framework, clearly it support redis cluster too.
 
 ## feature
-1. this library implement redis driver in Cache and Session, you can easy to use it. 
+1. this library implement redis driver in Cache and Session, and Queue, you can easy to use it.
 2. implement redis pipeline just like the laravel document introduce
 3. you can customize your serilize and unserilize function
 4. you can customize your cache expired time default unit
-
 
 ## install
 You can install it by composer, just execute below command
@@ -19,7 +18,7 @@ If you want to completely use phpredis instead of predis... You should add below
 ```php
 'providers' => [
         // ...
-        // YOUR OTHER PROVIDERS SETTING 
+        // YOUR OTHER PROVIDERS SETTING
         // ...
         // And you should commend those system's provider as below
         // Illuminate\Redis\RedisServiceProvider::class,
@@ -31,7 +30,7 @@ If you want to completely use phpredis instead of predis... You should add below
 
 aliases => [
         // you must rename the Redis Key name, because it's conflict with the \Redis class provide by phpredis
-        // may be you can rename it to MyRedis, So, you can use it like that: 
+        // may be you can rename it to MyRedis, So, you can use it like that:
         // MyRedis::get('key'); MyRedis::set('key', 'value'); MyRedis::pipeline(function($pipe){YOUR_CODE});
         'MyRedis' => Illuminate\Support\Facades\Redis::class,
 ]
