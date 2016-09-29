@@ -40,29 +40,27 @@ class RedisQueue extends \Illuminate\Queue\RedisQueue
     {
         $options = ['cas' => true, 'watch' => $from];
 
-        for ($i = 0; $i < 10; $i++) {
-            // First we need to get all of jobs that have expired based on the current time
-            // so that we can push them onto the main queue. After we get them we simply
-            // remove them from this "delay" queues. All of this within a transaction.
-            $jobs = $this->getExpiredJobs(
-                $this->redis, $from, $time = $this->getTime()
-            );
+        // First we need to get all of jobs that have expired based on the current time
+        // so that we can push them onto the main queue. After we get them we simply
+        // remove them from this "delay" queues. All of this within a transaction.
+        $jobs = $this->getExpiredJobs(
+            $this->redis, $from, $time = $this->getTime()
+        );
 
-            if (count($jobs) < 1) {
-                return;
-            }
+        if (count($jobs) < 1) {
+            return;
+        }
 
-            $ret = $this->redis->transaction($options, function ($transaction) use ($from, $to, $jobs, $time) {
-                // If we actually found any jobs, we will remove them from the old queue and we
-                // will insert them onto the new (ready) "queue". This means they will stand
-                // ready to be processed by the queue worker whenever their turn comes up.
-                $this->removeExpiredJobs($transaction, $from, $time);
-                $this->pushExpiredJobsOntoNewQueue($transaction, $to, $jobs);
-            });
+        $ret = $this->redis->bulkOperateCas(function ($transaction) use ($from, $to, $jobs, $time) {
+            // If we actually found any jobs, we will remove them from the old queue and we
+            // will insert them onto the new (ready) "queue". This means they will stand
+            // ready to be processed by the queue worker whenever their turn comes up.
+            $this->removeExpiredJobs($transaction, $from, $time);
+            $this->pushExpiredJobsOntoNewQueue($transaction, $to, $jobs);
+        }, $from);
 
-            if ($ret !== false) {
-                return $ret;
-            }
+        if ($ret !== false) {
+            return $ret;
         }
     }
 

@@ -123,4 +123,17 @@ class Database extends \Illuminate\Redis\Database
         $callback($Redis);
         return $Redis->exec();
     }
+
+    public function bulkOperateCas(callable $callback, $key)
+    {
+        $key .= ':cas';
+        $ret = $this->connection()->setNx($key, '1');
+        if (!$ret) {
+            return false;
+        }
+
+        $this->connection()->expire($key, 3);
+        $callback($this->connection());
+        return $this->connection()->del($key);
+    }
 }
