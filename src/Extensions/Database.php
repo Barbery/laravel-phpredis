@@ -83,6 +83,10 @@ class Database extends \Illuminate\Redis\Database
                 $redis->select($server['database']);
             }
 
+            if (!empty($server['password'])) {
+                $redis->auth($server['password']);
+            }
+
             $clients[$key] = $redis;
         }
 
