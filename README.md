@@ -7,6 +7,11 @@ this is the library provide phpredis support in the laravel framework, clearly i
 3. you can customize your serilize and unserilize function
 4. you can customize your cache expired time default unit
 
+## requirements
+* PHP 5.4+
+* [PhpRedis](https://github.com/phpredis/phpredis)
+* Laravel 5.x
+
 ## install
 You can install it by composer, just execute below command
 ```bash
