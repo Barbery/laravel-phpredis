@@ -8,9 +8,9 @@ this is the library provide phpredis support in the laravel framework, clearly i
 4. you can customize your cache expired time default unit
 
 ## requirements
-* PHP 5.4+
+* PHP >= 5.4.x
 * [PhpRedis](https://github.com/phpredis/phpredis)
-* Laravel 5.x
+* Laravel >= 5.2.x
 
 ## install
 You can install it by composer, just execute below command
