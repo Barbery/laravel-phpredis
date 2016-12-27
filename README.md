@@ -14,8 +14,15 @@ this is the library provide phpredis support in the laravel framework, clearly i
 
 ## install
 You can install it by composer, just execute below command
+
+### for laravel >= 5.3
 ```bash
 composer require barbery/laravel-phpredis:dev-master
+```
+
+### for laravel >= 5.2
+```bash
+composer require barbery/laravel-phpredis:v5.2.x-dev
 ```
 
 ## config
