@@ -3,69 +3,65 @@
 namespace Barbery\Extensions;
 
 use Illuminate\Queue\Jobs\RedisJob;
+use Illuminate\Queue\LuaScripts;
 
 class RedisQueue extends \Illuminate\Queue\RedisQueue
 {
-    protected function getConnection()
-    {
-        return $this->redis;
-    }
-
-    /**
-     * Pop the next job off of the queue.
-     *
-     * @param  string  $queue
-     * @return \Illuminate\Contracts\Queue\Job|null
-     */
     public function pop($queue = null)
     {
         $original = $queue ?: $this->default;
 
         $queue = $this->getQueue($queue);
 
+        $this->migrateExpiredJobs($queue . ':delayed', $queue);
+
         if (!is_null($this->expire)) {
-            $this->migrateAllExpiredJobs($queue);
+            $this->migrateExpiredJobs($queue . ':reserved', $queue);
         }
 
-        $job = $this->getConnection()->lpop($queue);
-
-        if (!empty($job)) {
-            $this->getConnection()->zadd($queue . ':reserved', $this->getTime() + $this->expire, $job);
-
-            return new RedisJob($this->container, $this, $job, $original);
-        }
-    }
-
-    public function migrateExpiredJobs($from, $to)
-    {
-        $options = ['cas' => true, 'watch' => $from];
-
-        // First we need to get all of jobs that have expired based on the current time
-        // so that we can push them onto the main queue. After we get them we simply
-        // remove them from this "delay" queues. All of this within a transaction.
-        $jobs = $this->getExpiredJobs(
-            $this->redis, $from, $time = $this->getTime()
+        list($job, $reserved) = $this->_eval(
+            LuaScripts::pop(), 2, $queue, $queue . ':reserved', $this->getTime() + $this->expire
         );
 
-        if (count($jobs) < 1) {
-            return;
-        }
-
-        $ret = $this->redis->bulkOperateCas(function ($transaction) use ($from, $to, $jobs, $time) {
-            // If we actually found any jobs, we will remove them from the old queue and we
-            // will insert them onto the new (ready) "queue". This means they will stand
-            // ready to be processed by the queue worker whenever their turn comes up.
-            $this->removeExpiredJobs($transaction, $from, $time);
-            $this->pushExpiredJobsOntoNewQueue($transaction, $to, $jobs);
-        }, $from);
-
-        if ($ret !== false) {
-            return $ret;
+        if ($reserved) {
+            return new RedisJob($this->container, $this, $job, $reserved, $original);
         }
     }
 
-    protected function removeExpiredJobs($transaction, $from, $time)
+    /**
+     * Delete a reserved job from the reserved queue and release it.
+     *
+     * @param  string  $queue
+     * @param  string  $job
+     * @param  int  $delay
+     * @return void
+     */
+    public function deleteAndRelease($queue, $job, $delay)
     {
-        $transaction->zremrangebyscore($from, '-inf', $time);
+        $queue = $this->getQueue($queue);
+
+        $this->_eval(
+            LuaScripts::release(), 2, $queue . ':delayed', $queue . ':reserved',
+            $job, $this->getTime() + $delay
+        );
+    }
+
+    /**
+     * Migrate the delayed jobs that are ready to the regular queue.
+     *
+     * @param  string  $from
+     * @param  string  $to
+     * @return void
+     */
+    public function migrateExpiredJobs($from, $to)
+    {
+        $this->_eval(
+            LuaScripts::migrateExpiredJobs(), 2, $from, $to, $this->getTime()
+        );
+    }
+
+    private function _eval($scripts, $keyNumber, ...$args)
+    {
+        return $this->getConnection()->eval($scripts, $args, $keyNumber);
     }
 }
