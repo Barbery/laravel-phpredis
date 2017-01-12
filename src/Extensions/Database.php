@@ -140,4 +140,25 @@ class Database extends \Illuminate\Redis\Database
         $callback($this->connection());
         return $this->connection()->del($key);
     }
+
+    public function scan(...$args)
+    {
+        trigger_error('your should use MyRedis::connection()->scan(), more usage look: https://github.com/phpredis/phpredis#scan', E_USER_DEPRECATED);
+    }
+
+    public function hScan(...$args)
+    {
+        trigger_error('your should use MyRedis::connection()->hScan(), more usage look: more usage look: https://github.com/phpredis/phpredis#hScan', E_USER_DEPRECATED);
+    }
+
+    public function sScan(...$args)
+    {
+        trigger_error('your should use MyRedis::connection()->sScan(), more usage look: more usage look: https://github.com/phpredis/phpredis#sScan', E_USER_DEPRECATED);
+    }
+
+    public function zScan(...$args)
+    {
+        trigger_error('your should use MyRedis::connection()->zScan(), more usage look: more usage look: https://github.com/phpredis/phpredis#zScan', E_USER_DEPRECATED);
+    }
+
 }
