@@ -18,7 +18,7 @@
         "ext-redis": "The php redis extension https://github.com/nicolasff/phpredis/ is required for connecting to redis server"
     },
     "require": {
-        "php": ">=5.4.0"
+        "php": ">=5.6.0"
     },
     "autoload": {
         "psr-4": {"Barbery\\": "src/"}

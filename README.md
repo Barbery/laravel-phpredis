@@ -8,7 +8,7 @@ this is the library provide phpredis support in the laravel framework, clearly i
 4. you can customize your cache expired time default unit
 
 ## requirements
-* PHP >= 5.4.x
+* PHP >= 5.6.x
 * [PhpRedis](https://github.com/phpredis/phpredis)
 * Laravel >= 5.2.x
 
@@ -112,3 +112,8 @@ The default unit in laravel is minutes, if you want to change it, you can add co
         ],
     ],
 ```
+
+
+## Issue
+Because Laravel 5.3.x use Lua script to migrate the queue job, and the redis cluster is not support.
+So if you use Laravel 5.3.x with redis cluster mode, then do not use the RedisQueue.
