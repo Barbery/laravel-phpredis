@@ -79,6 +79,28 @@ class Database extends \Illuminate\Redis\Database
                 $redis->setOption(Redis::OPT_PREFIX, $server['prefix']);
             }
 
+            if (!empty($server['serializer'])) {
+                switch (true) {
+                    case Redis::SERIALIZER_NONE === $server['serializer']:
+                    case 'none' === $server['serializer']:
+                        $serializer = Redis::SERIALIZER_NONE;
+                        break;
+                    case Redis::SERIALIZER_PHP === $server['serializer']:
+                    case 'php' === $server['serializer']:
+                        $serializer = Redis::SERIALIZER_PHP;
+                        break;
+                    case Redis::SERIALIZER_IGBINARY === $server['serializer']:
+                    case 'igbinary' === $server['serializer']:
+                        $serializer = Redis::SERIALIZER_IGBINARY;
+                        break;
+                    default:
+                        $serializer = null;
+                }
+                if (!is_null($serializer)) {
+                    $redis->setOption(Redis::OPT_SERIALIZER, $serializer);
+                }
+            }
+
             if (!empty($server['database'])) {
                 $redis->select($server['database']);
             }
