@@ -59,6 +59,19 @@ class RedisQueue extends \Illuminate\Queue\RedisQueue
             LuaScripts::migrateExpiredJobs(), 2, $from, $to, $this->getTime()
         );
     }
+    
+    /**
+     * Get the size of the queue.
+     *
+     * @param  string  $queue
+     * @return int
+     */
+    public function size($queue = null)
+    {
+        $queue = $this->getQueue($queue);
+
+        return $this->_eval(LuaScripts::size(), 3, $queue, $queue.':delayed', $queue.':reserved');
+    }
 
     private function _eval($scripts, $keyNumber, ...$args)
     {
