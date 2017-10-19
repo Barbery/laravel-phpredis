@@ -79,12 +79,12 @@ class Database extends \Illuminate\Redis\Database
                 $redis->setOption(Redis::OPT_PREFIX, $server['prefix']);
             }
 
-            if (!empty($server['database'])) {
-                $redis->select($server['database']);
-            }
-
             if (!empty($server['password'])) {
                 $redis->auth($server['password']);
+            }
+
+            if (!empty($server['database'])) {
+                $redis->select($server['database']);
             }
 
             $clients[$key] = $redis;
