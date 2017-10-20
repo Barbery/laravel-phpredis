@@ -16,7 +16,7 @@ this is the library provide phpredis support in the laravel framework, clearly i
 You can install it by composer, just execute below command
 
 ### for laravel >= 5.4
-Since laravel 5.4, laravel already support phpredis dirver. So, you don't need to use this library.
+Since laravel 5.4, laravel already support phpredis dirver. So, you don't need to use this library. [More info](https://laravel.com/docs/5.4/redis)
 
 ### for laravel >= 5.3
 ```bash
