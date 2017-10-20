@@ -15,6 +15,9 @@ this is the library provide phpredis support in the laravel framework, clearly i
 ## install
 You can install it by composer, just execute below command
 
+### for laravel >= 5.4
+Since laravel 5.4, laravel already support phpredis dirver. So, you don't need to use this library.
+
 ### for laravel >= 5.3
 ```bash
 composer require barbery/laravel-phpredis:dev-master
@@ -62,9 +65,9 @@ aliases => [
             'password' => env('REDIS_PASSWORD', null),
             'port' => env('REDIS_PORT', 6379),
             'database' => 0,
-            // can take one of the values: 
-            // Redis::SERIALIZER_NONE, 'none', 
-            // Redis::SERIALIZER_PHP, 'php', 
+            // can take one of the values:
+            // Redis::SERIALIZER_NONE, 'none',
+            // Redis::SERIALIZER_PHP, 'php',
             // Redis::SERIALIZER_IGBINARY, 'igbinary'
             'serializer' => env('REDIS_SERIALIZER', Redis::SERIALIZER_PHP),
         ],
